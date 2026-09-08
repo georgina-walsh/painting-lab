@@ -87,6 +87,8 @@ THREE_PAINT_RATIOS = [
     (3, 3, 2),
     (3, 3, 3),
 ]
+
+MIN_IMPROVEMENT = 0.15
     
 """
 PAINT_MIXES = [
@@ -353,30 +355,30 @@ def find_best_paint_mix(
         target_colour
     )
 
-    # Compare all three
-    if (
-        single_distance <= two_distance
-        and single_distance <= three_distance
-    ):
-        return (
-            (single_paint,),
-            (1,),
-            single_paint.rgb,
-            single_distance,
-        )
+    # Start with the simplest possible option
+    best_paints = (single_paint,)
+    best_ratio = (1,)
+    best_colour = single_paint.rgb
+    best_distance = single_distance
 
-    elif two_distance <= three_distance:
-        return (
-            two_paints,
-            two_ratio,
-            two_colour,
-            two_distance,
-        )
+    # Only use two paints if the improvement is meaningful
+    if two_distance <= best_distance * (1 - MIN_IMPROVEMENT):
+        best_paints = two_paints
+        best_ratio = two_ratio
+        best_colour = two_colour
+        best_distance = two_distance
 
-    else:
-        return (
-            three_paints,
-            three_ratio,
-            three_colour,
-            three_distance,
-        )
+    # Only use three paints if they improve meaningfully
+    # on whichever simpler option we currently have
+    if three_distance <= best_distance * (1 - MIN_IMPROVEMENT):
+        best_paints = three_paints
+        best_ratio = three_ratio
+        best_colour = three_colour
+        best_distance = three_distance
+
+    return (
+        best_paints,
+        best_ratio,
+        best_colour,
+        best_distance,
+    )
