@@ -1,6 +1,9 @@
 import sys
+
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QLabel,
     QMainWindow,
     QPushButton,
@@ -25,6 +28,10 @@ class PaintingLabWindow(QMainWindow):
             "Open Image"
         )
         
+        self.open_button.clicked.connect(
+            self.open_image
+        )
+        
         layout = QVBoxLayout()
         
         layout.addWidget(self.image_label)
@@ -35,6 +42,20 @@ class PaintingLabWindow(QMainWindow):
         
         self.setCentralWidget(container)
         
+        
+    def open_image(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Image",
+            "",
+            "Images (*.png *.jpg *.jpeg)",
+        )
+    
+        if file_path:
+            pixmap = QPixmap(file_path)
+            
+            self.image_label.setPixmap(pixmap)
+            
         
 def run_app():
     app = QApplication(sys.argv)
