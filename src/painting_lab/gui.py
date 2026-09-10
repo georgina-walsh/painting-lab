@@ -1,5 +1,6 @@
 import sys
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -20,22 +21,20 @@ class PaintingLabWindow(QMainWindow):
         self.setWindowTitle("Painting Lab")
         self.resize(900, 700)
         
-        self.image_label = QLabel(
-            "No image selected"
-        )
+        self.image_label = QLabel("No image selected")
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setMinimumSize(400, 300)
         
-        self.open_button = QPushButton(
-            "Open Image"
-        )
+        self.open_button = QPushButton("Open Image")
+        self.open_button.clicked.connect(self.open_image)
         
-        self.open_button.clicked.connect(
-            self.open_image
-        )
+        self.value_button = QPushButton("Value Study")
         
         layout = QVBoxLayout()
         
         layout.addWidget(self.image_label)
         layout.addWidget(self.open_button)
+        layout.addWidget(self.value_button)
         
         container = QWidget()
         container.setLayout(layout)
@@ -52,9 +51,26 @@ class PaintingLabWindow(QMainWindow):
         )
     
         if file_path:
-            pixmap = QPixmap(file_path)
+            self.image_path = file_path
+            self.original_pixmap = QPixmap(file_path)
             
-            self.image_label.setPixmap(pixmap)
+            self.display_image()
+            
+    def display_image(self):
+        if hasattr(self, "original_pixmap"):
+            scaled_pixmap = self.original_pixmap.scaled(
+                self.image_label.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+                )
+
+            self.image_label.setPixmap(scaled_pixmap)
+        
+            
+    def resizeEvent(self, event):
+        self.display_image()
+
+        super().resizeEvent(event)
             
         
 def run_app():
