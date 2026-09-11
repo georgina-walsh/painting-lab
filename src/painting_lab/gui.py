@@ -12,6 +12,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from painting_lab.basic_transformations import create_value_study
+from painting_lab.image_io import load_image
+
 
 class PaintingLabWindow(QMainWindow):
     
@@ -29,6 +32,7 @@ class PaintingLabWindow(QMainWindow):
         self.open_button.clicked.connect(self.open_image)
         
         self.value_button = QPushButton("Value Study")
+        self.value_button.clicked.connect(self.show_value_study)
         
         layout = QVBoxLayout()
         
@@ -56,6 +60,7 @@ class PaintingLabWindow(QMainWindow):
             
             self.display_image()
             
+            
     def display_image(self):
         if hasattr(self, "original_pixmap"):
             scaled_pixmap = self.original_pixmap.scaled(
@@ -71,6 +76,18 @@ class PaintingLabWindow(QMainWindow):
         self.display_image()
 
         super().resizeEvent(event)
+        
+    
+    def show_value_study(self):
+        if not hasattr(self, "image_path"):
+            return
+        
+        image = load_image(self.image_path)
+        value_image = create_value_study(image)
+        qt_image = ImageQt(value_image)
+        
+        self.original_pixmap = QPixmap.fromImage(qt_image)
+        self.display_image()
             
         
 def run_app():

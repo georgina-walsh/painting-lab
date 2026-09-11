@@ -46,3 +46,14 @@ def test_window_has_value_study_button():
 
     assert window.value_button.text() == "Value Study"
     
+    
+def test_window_has_value_study_method():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert callable(window.show_value_study)
+    
