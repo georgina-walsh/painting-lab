@@ -1,8 +1,11 @@
+from painting_lab.gui import PaintingLabWindow
+
 from PIL import Image
+
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 
-from painting_lab.gui import PaintingLabWindow
+from unittest.mock import patch
 
 
 def test_window_has_correct_title():
@@ -120,4 +123,18 @@ def test_value_study_updates_display(tmp_path):
 
     # Check that an image was produced.
     assert not window.current_pixmap.isNull()
+    
+    
+def test_value_selector_has_correct_options():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.value_selector.count() == 2
+
+    assert window.value_selector.itemData(0) == 3
+    assert window.value_selector.itemData(1) == 5
     

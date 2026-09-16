@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QComboBox,
     QFileDialog,
     QLabel,
     QMainWindow,
@@ -36,6 +37,10 @@ class PaintingLabWindow(QMainWindow):
         self.value_button = QPushButton("Value Study")
         self.value_button.clicked.connect(self.show_value_study)
         
+        self.value_selector = QComboBox()
+        self.value_selector.addItem("3 Values", 3)
+        self.value_selector.addItem("5 Values", 5)
+        
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
         
@@ -43,6 +48,7 @@ class PaintingLabWindow(QMainWindow):
         
         layout.addWidget(self.image_label)
         layout.addWidget(self.open_button)
+        layout.addWidget(self.value_selector)
         layout.addWidget(self.value_button)
         layout.addWidget(self.original_button)
         
@@ -90,10 +96,16 @@ class PaintingLabWindow(QMainWindow):
             return
         
         image = load_image(self.image_path)
-        value_image = create_value_study(image)
-        qt_image = ImageQt(value_image)
+        levels = self.value_selector.currentData()
         
+        value_image = create_value_study(
+            image,
+            levels=levels,
+        )
+        
+        qt_image = ImageQt(value_image)
         self.current_pixmap = QPixmap.fromImage(qt_image)
+        
         self.display_image()
         
         
