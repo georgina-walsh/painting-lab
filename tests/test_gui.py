@@ -138,3 +138,43 @@ def test_value_selector_has_correct_options():
     assert window.value_selector.itemData(0) == 3
     assert window.value_selector.itemData(1) == 5
     
+    
+def test_value_study_uses_selected_levels(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    window.value_selector.setCurrentIndex(0)
+
+    with patch(
+        "painting_lab.gui.create_value_study",
+        return_value=Image.new("RGB", (50, 50)),
+    ) as mock_transform:
+
+        window.show_value_study()
+
+        assert mock_transform.call_args.kwargs["levels"] == 3
+
+    window.value_selector.setCurrentIndex(1)
+
+    with patch(
+        "painting_lab.gui.create_value_study",
+        return_value=Image.new("RGB", (50, 50)),
+    ) as mock_transform:
+
+        window.show_value_study()
+
+        assert mock_transform.call_args.kwargs["levels"] == 5
