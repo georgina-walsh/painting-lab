@@ -1,5 +1,7 @@
 import sys
 
+from PIL.ImageQt import ImageQt
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
@@ -34,11 +36,15 @@ class PaintingLabWindow(QMainWindow):
         self.value_button = QPushButton("Value Study")
         self.value_button.clicked.connect(self.show_value_study)
         
+        self.original_button = QPushButton("Show Original")
+        self.original_button.clicked.connect(self.show_original)
+        
         layout = QVBoxLayout()
         
         layout.addWidget(self.image_label)
         layout.addWidget(self.open_button)
         layout.addWidget(self.value_button)
+        layout.addWidget(self.original_button)
         
         container = QWidget()
         container.setLayout(layout)
@@ -57,13 +63,14 @@ class PaintingLabWindow(QMainWindow):
         if file_path:
             self.image_path = file_path
             self.original_pixmap = QPixmap(file_path)
+            self.current_pixmap = self.original_pixmap
             
             self.display_image()
             
             
     def display_image(self):
-        if hasattr(self, "original_pixmap"):
-            scaled_pixmap = self.original_pixmap.scaled(
+        if hasattr(self, "current_pixmap"):
+            scaled_pixmap = self.current_pixmap.scaled(
                 self.image_label.size(),
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
@@ -86,7 +93,15 @@ class PaintingLabWindow(QMainWindow):
         value_image = create_value_study(image)
         qt_image = ImageQt(value_image)
         
-        self.original_pixmap = QPixmap.fromImage(qt_image)
+        self.current_pixmap = QPixmap.fromImage(qt_image)
+        self.display_image()
+        
+        
+    def show_original(self):
+        if not hasattr(self, "original_pixmap"):
+            return
+        
+        self.current_pixmap = self.original_pixmap
         self.display_image()
             
         
