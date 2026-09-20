@@ -31,7 +31,7 @@ class PaintingLabWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle("Painting Lab")
+        self.setWindowTitle("PaintPal by Painting Lab")
         self.resize(900, 700)
         
         self.image_label = QLabel("No image selected")
