@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
     QLabel,
     QMainWindow,
     QPushButton,
@@ -44,17 +46,51 @@ class PaintingLabWindow(QMainWindow):
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
         
-        layout = QVBoxLayout()
-        
-        layout.addWidget(self.image_label)
-        layout.addWidget(self.open_button)
-        layout.addWidget(self.value_selector)
-        layout.addWidget(self.value_button)
-        layout.addWidget(self.original_button)
-        
+        # Main layout: image on the left, controls on the right
+        main_layout = QHBoxLayout()
+
+
+        # LEFT: Image preview
+        main_layout.addWidget(self.image_label, 3)
+
+
+        # RIGHT: Control panel
+        controls_layout = QVBoxLayout()
+
+        controls_layout.addWidget(self.open_button)
+
+
+        # Value Study section
+        value_group = QGroupBox("Value Study")
+
+        value_layout = QVBoxLayout()
+
+        value_layout.addWidget(self.value_selector)
+        value_layout.addWidget(self.value_button)
+
+        value_group.setLayout(value_layout)
+
+        controls_layout.addWidget(value_group)
+
+
+        # Original image button
+        controls_layout.addWidget(self.original_button)
+
+        # Keep controls at the top of the panel
+        controls_layout.addStretch()
+
+
+        # Put the controls inside their own widget
+        controls_widget = QWidget()
+        controls_widget.setLayout(controls_layout)
+
+        main_layout.addWidget(controls_widget, 1)
+
+
+        # Set the main window content
         container = QWidget()
-        container.setLayout(layout)
-        
+        container.setLayout(main_layout)
+
         self.setCentralWidget(container)
         
         

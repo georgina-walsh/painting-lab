@@ -3,7 +3,7 @@ from painting_lab.gui import PaintingLabWindow
 from PIL import Image
 
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QGroupBox
 
 from unittest.mock import patch
 
@@ -178,3 +178,19 @@ def test_value_study_uses_selected_levels(tmp_path):
         window.show_value_study()
 
         assert mock_transform.call_args.kwargs["levels"] == 5
+        
+        
+def test_gui_has_value_study_group():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    groups = window.findChildren(QGroupBox)
+
+    assert any(
+        group.title() == "Value Study"
+        for group in groups
+    )
