@@ -194,3 +194,60 @@ def test_gui_has_value_study_group():
         group.title() == "Value Study"
         for group in groups
     )
+    
+
+def test_line_drawing_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.line_selector.count() == 3
+    assert window.line_button.text() == "Generate Line Drawing"
+
+    assert window.line_selector.itemData(0) == "simple"
+    assert window.line_selector.itemData(1) == "detailed"
+    assert window.line_selector.itemData(2) == "value_based"
+    
+    
+def test_line_drawing_uses_selected_algorithm(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    algorithms = [
+        ("simple", "create_simple_line_drawing"),
+        ("detailed", "create_detailed_line_drawing"),
+        ("value_based", "create_value_based_line_drawing"),
+    ]
+
+    for selection, function_name in algorithms:
+
+        index = window.line_selector.findData(selection)
+        window.line_selector.setCurrentIndex(index)
+
+        with patch(
+            f"painting_lab.gui.{function_name}",
+            return_value=Image.new("RGB", (50, 50)),
+        ) as mock_algorithm:
+
+            window.line_button.click()
+
+            mock_algorithm.assert_called_once()
+
+            assert not window.current_pixmap.isNull()

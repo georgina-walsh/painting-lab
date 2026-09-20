@@ -18,6 +18,11 @@ from PySide6.QtWidgets import (
 )
 
 from painting_lab.basic_transformations import create_value_study
+from painting_lab.drawing import (
+    create_simple_line_drawing,
+    create_detailed_line_drawing,
+    create_value_based_line_drawing,
+)
 from painting_lab.image_io import load_image
 
 
@@ -42,6 +47,15 @@ class PaintingLabWindow(QMainWindow):
         self.value_selector = QComboBox()
         self.value_selector.addItem("3 Values", 3)
         self.value_selector.addItem("5 Values", 5)
+        
+        self.line_selector = QComboBox()
+        
+        self.line_selector.addItem("Simple", "simple")
+        self.line_selector.addItem("Detailed", "detailed")
+        self.line_selector.addItem("Value-Based", "value_based")
+        
+        self.line_button = QPushButton("Generate Line Drawing")
+        self.line_button.clicked.connect(self.show_line_drawing)
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -69,8 +83,20 @@ class PaintingLabWindow(QMainWindow):
         value_layout.addWidget(self.value_button)
 
         value_group.setLayout(value_layout)
-
+        
         controls_layout.addWidget(value_group)
+        
+        # Line Drawing Section
+        line_group = QGroupBox("Line Drawing")
+        
+        line_layout = QVBoxLayout()
+        
+        line_layout.addWidget(self.line_selector)
+        line_layout.addWidget(self.line_button)
+        
+        line_group.setLayout(line_layout)
+
+        controls_layout.addWidget(line_group)
 
 
         # Original image button
@@ -140,6 +166,33 @@ class PaintingLabWindow(QMainWindow):
         )
         
         qt_image = ImageQt(value_image)
+        self.current_pixmap = QPixmap.fromImage(qt_image)
+        
+        self.display_image()
+        
+        
+    def show_line_drawing(self):
+        if not hasattr(self, "image_path"):
+            return
+        
+        image = load_image(self.image_path)
+        
+        selected = self.line_selector.currentData()
+        
+        if selected == "simple":
+            result = create_simple_line_drawing(image)
+            
+        elif selected == "detailed":
+            result = create_detailed_line_drawing(image)
+            
+        elif selected == "value_based":
+            result = create_value_based_line_drawing(image)
+            
+        else:
+            return
+        
+        qt_image = ImageQt(result)
+        
         self.current_pixmap = QPixmap.fromImage(qt_image)
         
         self.display_image()
