@@ -5,6 +5,8 @@ from PIL import Image
 from PySide6.QtGui import QColor, QPalette, QPixmap
 from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
+from types import SimpleNamespace
+
 from unittest.mock import patch
 
 
@@ -589,24 +591,22 @@ def test_palette_uses_selected_colours(tmp_path):
             # Check the first swatch has the correct colour
             first_swatch = window.palette_layout.itemAt(0).widget()
 
-            assert first_swatch.autoFillBackground()
-
             assert first_swatch.palette().color(
-                QPalette.ColorRole.Window
+                QPalette.ColorRole.Button
             ) == QColor(180, 70, 50)
 
-            # Check the second swatch
+
             second_swatch = window.palette_layout.itemAt(1).widget()
 
             assert second_swatch.palette().color(
-                QPalette.ColorRole.Window
+                QPalette.ColorRole.Button
             ) == QColor(220, 180, 90)
 
-            # Check the third swatch
+
             third_swatch = window.palette_layout.itemAt(2).widget()
 
             assert third_swatch.palette().color(
-                QPalette.ColorRole.Window
+                QPalette.ColorRole.Button
             ) == QColor(60, 100, 130)
             
             
@@ -638,8 +638,13 @@ def test_mixing_guide_displays_recipe():
         (220, 180, 90),
     ]
 
+    window.select_colour((180, 70, 50))
+
     mock_result = (
-        ["Cadmium Red", "Yellow Ochre"],
+        [
+            SimpleNamespace(name="Cadmium Red"),
+            SimpleNamespace(name="Yellow Ochre"),
+        ],
         [3, 1],
         (175, 75, 55),
         12.5,
@@ -659,12 +664,10 @@ def test_mixing_guide_displays_recipe():
         result = window.mix_result.text()
 
         assert "Cadmium Red" in result
-
         assert "Yellow Ochre" in result
-
         assert "3 : 1" in result
 
-        # Internal algorithm data must not appear.
+        # Internal algorithm values should not be displayed.
         assert "12.5" not in result
         assert "(175, 75, 55)" not in result
         
@@ -682,4 +685,44 @@ def test_mixing_guide_without_palette():
     assert window.mix_result.text() == (
         "Extract a palette to begin."
     )
+    
+    
+def test_mixing_guide_uses_selected_colour():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.extracted_palette = [
+        (180, 70, 50),
+        (220, 180, 90),
+    ]
+
+    window.select_colour((220, 180, 90))
+
+    mock_result = (
+        [
+            SimpleNamespace(name="Yellow Ochre"),
+            SimpleNamespace(name="Titanium White"),
+        ],
+        [3, 1],
+        (215, 175, 85),
+        12.5,
+    )
+
+    with patch(
+        "painting_lab.gui.find_best_paint_mix",
+        return_value=mock_result,
+    ) as mock_mix:
+
+        window.mix_button.click()
+
+        mock_mix.assert_called_once_with(
+            (220, 180, 90)
+        )
+
+        assert "Yellow Ochre" in window.mix_result.text()
+        assert "Titanium White" in window.mix_result.text()
     

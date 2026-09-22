@@ -116,6 +116,8 @@ class PaintingLabWindow(QMainWindow):
         self.palette_button.clicked.connect(self.show_palette)
         self.palette_layout = QHBoxLayout()
         
+        self.selected_colour = None
+        
         self.mix_button = QPushButton("Suggest Paint Mix")
         self.mix_button.clicked.connect(self.show_paint_mix)
         
@@ -408,6 +410,13 @@ class PaintingLabWindow(QMainWindow):
         self.display_image()
         
         
+    def select_colour(self, colour):
+        self.selected_colour = colour
+        self.mix_result.setText(
+            "Colour selected. Click Suggest Paint Mix."
+        )
+        
+        
     def show_palette(self):
         if not hasattr(self, "image_path"):
             return
@@ -418,6 +427,8 @@ class PaintingLabWindow(QMainWindow):
         
         palette = extract_palette(image, colours=colours)
         self.extracted_palette = palette
+        self.selected_colour = None
+        self.mix_result.setText("Select a colour from the palette.")
         
         # Remove existing swatches
         while self.palette_layout.count():
@@ -430,7 +441,7 @@ class PaintingLabWindow(QMainWindow):
                 
         # Display new palette
         for colour in palette:
-            swatch = QWidget()
+            swatch = QPushButton()
             
             swatch.setFixedSize(35, 35)
             
@@ -445,13 +456,17 @@ class PaintingLabWindow(QMainWindow):
             swatch_palette = swatch.palette()
             
             swatch_palette.setColor(
-                QPalette.ColorRole.Window,
+                QPalette.ColorRole.Button,
                 qt_colour,
             )
             
             swatch.setPalette(swatch_palette)
-            
             swatch.setAutoFillBackground(True)
+            swatch.setFlat(True)
+            
+            swatch.clicked.connect(
+                lambda checked=False, c=colour: self.select_colour(c)
+            )
             
             self.palette_layout.addWidget(swatch)
             
@@ -466,8 +481,11 @@ class PaintingLabWindow(QMainWindow):
             self.mix_result.setText("No colours were found.")
             return
         
-        # Start with first colour in palette
-        target_colour = self.extracted_palette[0]
+        if self.selected_colour is None:
+            self.mix_result.setText("Select a colour from the palette.")
+            return
+        
+        target_colour = self.selected_colour
         
         paints, ratio, mixed_colour, distance = (find_best_paint_mix(target_colour))
         
