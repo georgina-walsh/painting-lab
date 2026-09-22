@@ -18,12 +18,15 @@ from PySide6.QtWidgets import (
 )
 
 from painting_lab.basic_transformations import create_value_study
+
 from painting_lab.drawing import (
     create_simple_line_drawing,
     create_detailed_line_drawing,
     create_value_based_line_drawing,
 )
 from painting_lab.image_io import load_image
+
+from painting_lab.painting_stages import create_grisaille
 
 
 class PaintingLabWindow(QMainWindow):
@@ -56,6 +59,14 @@ class PaintingLabWindow(QMainWindow):
         
         self.line_button = QPushButton("Generate Line Drawing")
         self.line_button.clicked.connect(self.show_line_drawing)
+        
+        self.grisaille_selector = QComboBox()
+        
+        self.grisaille_selector.addItem("8 Tones", 8)
+        self.grisaille_selector.addItem("16 Tones", 16)
+        
+        self.grisaille_button = QPushButton("Generate Grisaille")
+        self.grisaille_button.clicked.connect(self.show_grisaille)
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -97,7 +108,18 @@ class PaintingLabWindow(QMainWindow):
         line_group.setLayout(line_layout)
 
         controls_layout.addWidget(line_group)
-
+        
+        # Grisaille Section
+        grisaille_group = QGroupBox("Grisaille")
+         
+        grisaille_layout = QVBoxLayout()
+         
+        grisaille_layout.addWidget(self.grisaille_selector)
+        grisaille_layout.addWidget(self.grisaille_button)
+         
+        grisaille_group.setLayout(grisaille_layout)
+        
+        controls_layout.addWidget(grisaille_group)
 
         # Original image button
         controls_layout.addWidget(self.original_button)
@@ -192,6 +214,23 @@ class PaintingLabWindow(QMainWindow):
             return
         
         qt_image = ImageQt(result)
+        
+        self.current_pixmap = QPixmap.fromImage(qt_image)
+        
+        self.display_image()
+        
+    
+    def show_grisaille(self):
+        if not hasattr(self, "image_path"):
+            return
+        
+        image = load_image(self.image_path)
+        
+        tones = self.grisaille_selector.currentData()
+        
+        grisaille_image = create_grisaille(image, tones=tones)
+        
+        qt_image = ImageQt(grisaille_image)
         
         self.current_pixmap = QPixmap.fromImage(qt_image)
         

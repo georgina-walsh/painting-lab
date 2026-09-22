@@ -16,7 +16,7 @@ def test_window_has_correct_title():
 
     window = PaintingLabWindow()
 
-    assert window.windowTitle() == "Painting Lab"
+    assert window.windowTitle() == "PaintPal by Painting Lab"
 
 
 def test_window_has_open_image_button():
@@ -251,3 +251,92 @@ def test_line_drawing_uses_selected_algorithm(tmp_path):
             mock_algorithm.assert_called_once()
 
             assert not window.current_pixmap.isNull()
+            
+            
+def test_line_drawing_without_image_does_nothing():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.line_button.click()
+
+    assert window.image_label.text() == "No image selected"
+    assert not hasattr(window, "current_pixmap")
+    
+    
+def test_grisaille_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.grisaille_selector.count() == 2
+
+    assert window.grisaille_selector.itemData(0) == 8
+    assert window.grisaille_selector.itemData(1) == 16
+
+    assert window.grisaille_button.text() == "Generate Grisaille"
+    
+    
+def test_grisaille_uses_selected_tones(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    # Create a temporary photograph.
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    # Test both dropdown options.
+    for tones in (8, 16):
+
+        index = window.grisaille_selector.findData(
+            tones
+        )
+
+        window.grisaille_selector.setCurrentIndex(
+            index
+        )
+
+        with patch(
+            "painting_lab.gui.create_grisaille",
+            return_value=Image.new("RGB", (50, 50)),
+        ) as mock_grisaille:
+
+            window.grisaille_button.click()
+
+            # Check that the correct number of tones
+            # was passed to the algorithm.
+            assert mock_grisaille.call_args.kwargs["tones"] == tones
+
+            # Check that the preview contains an image.
+            assert not window.current_pixmap.isNull()
+            
+            
+def test_grisaille_without_image_does_nothing():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.grisaille_button.click()
+
+    assert window.image_label.text() == "No image selected"
+    assert not hasattr(window, "current_pixmap")
