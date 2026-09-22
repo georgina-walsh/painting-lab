@@ -28,6 +28,7 @@ from painting_lab.drawing import (
 from painting_lab.image_io import load_image
 
 from painting_lab.painting_stages import (
+    create_colour_block_in,
     create_grisaille,
     create_imprimatura,
     create_verdaccio,
@@ -88,6 +89,17 @@ class PaintingLabWindow(QMainWindow):
         
         self.verdaccio_button = QPushButton("Generate Verdaccio")
         self.verdaccio_button.clicked.connect(self.show_verdaccio)
+        
+        self.colour_selector = QComboBox()
+        
+        self.colour_selector.addItem("5 Colours", 5)
+        self.colour_selector.addItem("8 Colours", 8)
+        self.colour_selector.addItem("12 Colours", 12)
+        
+        self.colour_selector.setCurrentIndex(1)
+        
+        self.colour_button = QPushButton("Generate Colour Block-In")
+        self.colour_button.clicked.connect(self.show_colour_block)
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -165,6 +177,18 @@ class PaintingLabWindow(QMainWindow):
         verdaccio_group.setLayout(verdaccio_layout)
         
         controls_layout.addWidget(verdaccio_group)
+        
+        # Colour Block-In Section
+        colour_group = QGroupBox("Colour Block-In")
+        
+        colour_layout = QVBoxLayout()
+        
+        colour_layout.addWidget(self.colour_selector)
+        colour_layout.addWidget(self.colour_button)
+        
+        colour_group.setLayout(colour_layout)
+        
+        controls_layout.addWidget(colour_group)
 
         # Original image button
         controls_layout.addWidget(self.original_button)
@@ -319,6 +343,23 @@ class PaintingLabWindow(QMainWindow):
         
         self.display_image()
         
+        
+    def show_colour_block(self):
+        if not hasattr(self, "image_path"):
+            return
+
+        image = load_image(self.image_path)
+        
+        colours = self.colour_selector.currentData()
+        
+        block_image = create_colour_block_in(image, colours=colours)
+        
+        qt_image = ImageQt(block_image)
+        
+        self.current_pixmap = QPixmap.fromImage(qt_image)
+        
+        self.display_image()
+                
         
     def show_original(self):
         if not hasattr(self, "original_pixmap"):

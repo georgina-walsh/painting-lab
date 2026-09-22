@@ -455,3 +455,70 @@ def test_control_panel_is_scrollable():
 
     assert scroll_areas[0].widgetResizable()
     
+    
+def test_colour_block_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.colour_selector.count() == 3
+
+    assert window.colour_selector.itemData(0) == 5
+    assert window.colour_selector.itemData(1) == 8
+    assert window.colour_selector.itemData(2) == 12
+
+    assert window.colour_button.text() == "Generate Colour Block-In"
+    
+    
+def test_colour_block_uses_selected_colours(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    for colours in (5, 8, 12):
+
+        index = window.colour_selector.findData(colours)
+
+        window.colour_selector.setCurrentIndex(index)
+
+        with patch(
+            "painting_lab.gui.create_colour_block_in",
+            return_value=Image.new("RGB", (50, 50)),
+        ) as mock_block:
+
+            window.colour_button.click()
+
+            assert mock_block.call_args.kwargs["colours"] == colours
+
+            assert not window.current_pixmap.isNull()
+            
+            
+def test_colour_block_without_image_does_nothing():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.colour_button.click()
+
+    assert window.image_label.text() == "No image selected"
+    assert not hasattr(window, "current_pixmap")
+    
