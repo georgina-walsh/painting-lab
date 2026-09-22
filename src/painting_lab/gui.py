@@ -26,7 +26,11 @@ from painting_lab.drawing import (
 )
 from painting_lab.image_io import load_image
 
-from painting_lab.painting_stages import create_grisaille, create_imprimatura
+from painting_lab.painting_stages import (
+    create_grisaille,
+    create_imprimatura,
+    create_verdaccio,
+)
 
 
 class PaintingLabWindow(QMainWindow):
@@ -75,6 +79,14 @@ class PaintingLabWindow(QMainWindow):
         
         self.imprimatura_button = QPushButton("Generate Imprimatura")
         self.imprimatura_button.clicked.connect(self.show_imprimatura)
+        
+        self.verdaccio_selector = QComboBox()
+        
+        self.verdaccio_selector.addItem("8 Tones", 8)
+        self.verdaccio_selector.addItem("16 Tones", 16)
+        
+        self.verdaccio_button = QPushButton("Generate Verdaccio")
+        self.verdaccio_button.clicked.connect(self.show_verdaccio)
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -140,6 +152,18 @@ class PaintingLabWindow(QMainWindow):
         imprimatura_group.setLayout(imprimatura_layout)
         
         controls_layout.addWidget(imprimatura_group)
+        
+        # Verdaccio Section
+        verdaccio_group = QGroupBox("Verdaccio")
+        
+        verdaccio_layout = QVBoxLayout()
+        
+        verdaccio_layout.addWidget(self.verdaccio_selector)
+        verdaccio_layout.addWidget(self.verdaccio_button)
+        
+        verdaccio_group.setLayout(verdaccio_layout)
+        
+        controls_layout.addWidget(verdaccio_group)
 
         # Original image button
         controls_layout.addWidget(self.original_button)
@@ -268,6 +292,23 @@ class PaintingLabWindow(QMainWindow):
         imprimatura_image = create_imprimatura(image, tone=tone)
         
         qt_image = ImageQt(imprimatura_image)
+        
+        self.current_pixmap = QPixmap.fromImage(qt_image)
+        
+        self.display_image()
+        
+        
+    def show_verdaccio(self):
+        if not hasattr(self, "image_path"):
+            return
+        
+        image = load_image(self.image_path)
+        
+        tones = self.verdaccio_selector.currentData()
+        
+        verdaccio_image = create_verdaccio(image, tones=tones)
+        
+        qt_image = ImageQt(verdaccio_image)
         
         self.current_pixmap = QPixmap.fromImage(qt_image)
         

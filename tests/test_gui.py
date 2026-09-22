@@ -390,3 +390,53 @@ def test_imprimatura_uses_selected_tone(tmp_path):
 
             assert mock_imprimatura.call_args.kwargs["tone"] == tone
             assert not window.current_pixmap.isNull()
+            
+            
+def test_verdaccio_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.verdaccio_selector.count() == 2
+
+    assert window.verdaccio_selector.itemData(0) == 8
+    assert window.verdaccio_selector.itemData(1) == 16
+
+    assert window.verdaccio_button.text() == "Generate Verdaccio"
+    
+    
+def test_verdaccio_uses_selected_tones(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    for tones in (8, 16):
+        index = window.verdaccio_selector.findData(tones)
+        window.verdaccio_selector.setCurrentIndex(index)
+
+        with patch(
+            "painting_lab.gui.create_verdaccio",
+            return_value=Image.new("RGB", (50, 50)),
+        ) as mock_verdaccio:
+
+            window.verdaccio_button.click()
+
+            assert mock_verdaccio.call_args.kwargs["tones"] == tones
+            assert not window.current_pixmap.isNull()
+            
