@@ -35,6 +35,8 @@ from painting_lab.painting_stages import (
     extract_palette,
 )
 
+from painting_lab.paint_mixing import find_best_paint_mix
+
 
 class PaintingLabWindow(QMainWindow):
     
@@ -113,6 +115,12 @@ class PaintingLabWindow(QMainWindow):
         self.palette_button = QPushButton("Extract Palette")
         self.palette_button.clicked.connect(self.show_palette)
         self.palette_layout = QHBoxLayout()
+        
+        self.mix_button = QPushButton("Suggest Paint Mix")
+        self.mix_button.clicked.connect(self.show_paint_mix)
+        
+        self.mix_result = QLabel("Extract a palette to begin painting.")
+        self.mix_result.setWordWrap(True)
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -216,6 +224,18 @@ class PaintingLabWindow(QMainWindow):
         palette_group.setLayout(palette_layout)
         
         controls_layout.addWidget(palette_group)
+        
+        # Paint Mixing Guide
+        mix_group = QGroupBox("Paint-Mixing Guide")
+        
+        mix_layout = QVBoxLayout()
+        
+        mix_layout.addWidget(self.mix_button)
+        mix_layout.addWidget(self.mix_result)
+        
+        mix_group.setLayout(mix_layout)
+        
+        controls_layout.addWidget(mix_group)
 
         # Original image button
         controls_layout.addWidget(self.original_button)
@@ -397,6 +417,7 @@ class PaintingLabWindow(QMainWindow):
         colours = self.palette_selector.currentData()
         
         palette = extract_palette(image, colours=colours)
+        self.extracted_palette = palette
         
         # Remove existing swatches
         while self.palette_layout.count():
@@ -433,6 +454,34 @@ class PaintingLabWindow(QMainWindow):
             swatch.setAutoFillBackground(True)
             
             self.palette_layout.addWidget(swatch)
+            
+    
+    def show_paint_mix(self):
+        #Check palette has been extracted
+        if not hasattr(self, "extracted_palette"):
+            self.mix_result.setText("Extract a palette to begin.")
+            return
+        
+        if not self.extracted_palette:
+            self.mix_result.setText("No colours were found.")
+            return
+        
+        # Start with first colour in palette
+        target_colour = self.extracted_palette[0]
+        
+        paints, ratio, mixed_colour, distance = (find_best_paint_mix(target_colour))
+        
+        paint_names = " + ".join(
+            paint.name for paint in paints
+            )
+        
+        ratio_text = " : ".join(str(amount) for amount in ratio)
+        
+        self.mix_result.setText(
+            f"Suggested starting mix:\n"
+            f"{paint_names}\n\n"
+            f"Approximate ratio: {ratio_text}"
+        )
                   
         
     def show_original(self):

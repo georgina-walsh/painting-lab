@@ -608,3 +608,78 @@ def test_palette_uses_selected_colours(tmp_path):
             assert third_swatch.palette().color(
                 QPalette.ColorRole.Window
             ) == QColor(60, 100, 130)
+            
+            
+def test_mixing_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.mix_button.text() == "Suggest Paint Mix"
+
+    assert window.mix_result.text() == (
+        "Extract a palette to begin painting."
+    )
+    
+
+def test_mixing_guide_displays_recipe():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.extracted_palette = [
+        (180, 70, 50),
+        (220, 180, 90),
+    ]
+
+    mock_result = (
+        ["Cadmium Red", "Yellow Ochre"],
+        [3, 1],
+        (175, 75, 55),
+        12.5,
+    )
+
+    with patch(
+        "painting_lab.gui.find_best_paint_mix",
+        return_value=mock_result,
+    ) as mock_mix:
+
+        window.mix_button.click()
+
+        mock_mix.assert_called_once_with(
+            (180, 70, 50)
+        )
+
+        result = window.mix_result.text()
+
+        assert "Cadmium Red" in result
+
+        assert "Yellow Ochre" in result
+
+        assert "3 : 1" in result
+
+        # Internal algorithm data must not appear.
+        assert "12.5" not in result
+        assert "(175, 75, 55)" not in result
+        
+        
+def test_mixing_guide_without_palette():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.mix_button.click()
+
+    assert window.mix_result.text() == (
+        "Extract a palette to begin."
+    )
+    
