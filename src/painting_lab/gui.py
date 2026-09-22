@@ -26,7 +26,7 @@ from painting_lab.drawing import (
 )
 from painting_lab.image_io import load_image
 
-from painting_lab.painting_stages import create_grisaille
+from painting_lab.painting_stages import create_grisaille, create_imprimatura
 
 
 class PaintingLabWindow(QMainWindow):
@@ -67,6 +67,14 @@ class PaintingLabWindow(QMainWindow):
         
         self.grisaille_button = QPushButton("Generate Grisaille")
         self.grisaille_button.clicked.connect(self.show_grisaille)
+        
+        self.imprimatura_selector = QComboBox()
+        
+        self.imprimatura_selector.addItem("Burnt Sienna", "burnt_sienna")
+        self.imprimatura_selector.addItem("Raw Umber", "raw_umber")
+        
+        self.imprimatura_button = QPushButton("Generate Imprimatura")
+        self.imprimatura_button.clicked.connect(self.show_imprimatura)
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -120,6 +128,18 @@ class PaintingLabWindow(QMainWindow):
         grisaille_group.setLayout(grisaille_layout)
         
         controls_layout.addWidget(grisaille_group)
+        
+        # Imprimatura Section
+        imprimatura_group = QGroupBox("Imprimatura")
+        
+        imprimatura_layout = QVBoxLayout()
+        
+        imprimatura_layout.addWidget(self.imprimatura_selector)
+        imprimatura_layout.addWidget(self.imprimatura_button)
+        
+        imprimatura_group.setLayout(imprimatura_layout)
+        
+        controls_layout.addWidget(imprimatura_group)
 
         # Original image button
         controls_layout.addWidget(self.original_button)
@@ -231,6 +251,23 @@ class PaintingLabWindow(QMainWindow):
         grisaille_image = create_grisaille(image, tones=tones)
         
         qt_image = ImageQt(grisaille_image)
+        
+        self.current_pixmap = QPixmap.fromImage(qt_image)
+        
+        self.display_image()
+        
+        
+    def show_imprimatura(self):
+        if not hasattr(self, "image_path"):
+            return
+        
+        image = load_image(self.image_path)
+        
+        tone = self.imprimatura_selector.currentData()
+        
+        imprimatura_image = create_imprimatura(image, tone=tone)
+        
+        qt_image = ImageQt(imprimatura_image)
         
         self.current_pixmap = QPixmap.fromImage(qt_image)
         

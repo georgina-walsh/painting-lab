@@ -340,3 +340,53 @@ def test_grisaille_without_image_does_nothing():
 
     assert window.image_label.text() == "No image selected"
     assert not hasattr(window, "current_pixmap")
+    
+
+def test_imprimatura_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.imprimatura_selector.count() == 2
+
+    assert window.imprimatura_selector.itemData(0) == "burnt_sienna"
+    assert window.imprimatura_selector.itemData(1) == "raw_umber"
+
+    assert window.imprimatura_button.text() == "Generate Imprimatura"
+    
+    
+def test_imprimatura_uses_selected_tone(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    for tone in ("burnt_sienna", "raw_umber"):
+
+        index = window.imprimatura_selector.findData(tone)
+        window.imprimatura_selector.setCurrentIndex(index)
+
+        with patch(
+            "painting_lab.gui.create_imprimatura",
+            return_value=Image.new("RGB", (50, 50)),
+        ) as mock_imprimatura:
+
+            window.imprimatura_button.click()
+
+            assert mock_imprimatura.call_args.kwargs["tone"] == tone
+            assert not window.current_pixmap.isNull()
