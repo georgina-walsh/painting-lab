@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -176,8 +177,12 @@ class PaintingLabWindow(QMainWindow):
         controls_widget = QWidget()
         controls_widget.setLayout(controls_layout)
 
-        main_layout.addWidget(controls_widget, 1)
-
+        # Scrollable area
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(controls_widget)
+        
+        main_layout.addWidget(scroll_area, 1)
 
         # Set the main window content
         container = QWidget()

@@ -3,7 +3,7 @@ from painting_lab.gui import PaintingLabWindow
 from PIL import Image
 
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QApplication, QGroupBox
+from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
 from unittest.mock import patch
 
@@ -440,3 +440,18 @@ def test_verdaccio_uses_selected_tones(tmp_path):
             assert mock_verdaccio.call_args.kwargs["tones"] == tones
             assert not window.current_pixmap.isNull()
             
+            
+def test_control_panel_is_scrollable():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    scroll_areas = window.findChildren(QScrollArea)
+
+    assert len(scroll_areas) == 1
+
+    assert scroll_areas[0].widgetResizable()
+    
