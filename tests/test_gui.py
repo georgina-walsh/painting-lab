@@ -2,7 +2,7 @@ from painting_lab.gui import PaintingLabWindow
 
 from PIL import Image
 
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QColor, QPalette, QPixmap
 from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
 from unittest.mock import patch
@@ -522,3 +522,89 @@ def test_colour_block_without_image_does_nothing():
     assert window.image_label.text() == "No image selected"
     assert not hasattr(window, "current_pixmap")
     
+    
+def test_palette_controls_exist():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    assert window.palette_selector.count() == 3
+
+    assert window.palette_selector.itemData(0) == 5
+    assert window.palette_selector.itemData(1) == 8
+    assert window.palette_selector.itemData(2) == 12
+
+    assert window.palette_button.text() == "Extract Palette"
+    
+    
+def test_palette_uses_selected_colours(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    # Create a temporary test image
+    image_path = tmp_path / "test.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(120, 150, 180),
+    ).save(image_path)
+
+    window.image_path = str(image_path)
+
+    # Colours returned by our mocked algorithm
+    expected_palette = [
+        (180, 70, 50),
+        (220, 180, 90),
+        (60, 100, 130),
+    ]
+
+    # Test each dropdown option
+    for colours in (5, 8, 12):
+
+        index = window.palette_selector.findData(colours)
+        window.palette_selector.setCurrentIndex(index)
+
+        with patch(
+            "painting_lab.gui.extract_palette",
+            return_value=expected_palette,
+        ) as mock_extract:
+
+            # Click the actual GUI button
+            window.palette_button.click()
+
+            # Check the correct setting reaches the algorithm
+            assert mock_extract.call_args.kwargs["colours"] == colours
+
+            # Check that exactly three swatches are displayed
+            assert window.palette_layout.count() == 3
+
+            # Check the first swatch has the correct colour
+            first_swatch = window.palette_layout.itemAt(0).widget()
+
+            assert first_swatch.autoFillBackground()
+
+            assert first_swatch.palette().color(
+                QPalette.ColorRole.Window
+            ) == QColor(180, 70, 50)
+
+            # Check the second swatch
+            second_swatch = window.palette_layout.itemAt(1).widget()
+
+            assert second_swatch.palette().color(
+                QPalette.ColorRole.Window
+            ) == QColor(220, 180, 90)
+
+            # Check the third swatch
+            third_swatch = window.palette_layout.itemAt(2).widget()
+
+            assert third_swatch.palette().color(
+                QPalette.ColorRole.Window
+            ) == QColor(60, 100, 130)

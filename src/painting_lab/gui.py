@@ -3,7 +3,7 @@ import sys
 from PIL.ImageQt import ImageQt
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QColor, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -32,6 +32,7 @@ from painting_lab.painting_stages import (
     create_grisaille,
     create_imprimatura,
     create_verdaccio,
+    extract_palette,
 )
 
 
@@ -100,6 +101,18 @@ class PaintingLabWindow(QMainWindow):
         
         self.colour_button = QPushButton("Generate Colour Block-In")
         self.colour_button.clicked.connect(self.show_colour_block)
+        
+        self.palette_selector = QComboBox()
+        
+        self.palette_selector.addItem("5 Colours", 5)
+        self.palette_selector.addItem("8 Colours", 8)
+        self.palette_selector.addItem("12 Colours", 12)
+        
+        self.palette_selector.setCurrentIndex(1)
+        
+        self.palette_button = QPushButton("Extract Palette")
+        self.palette_button.clicked.connect(self.show_palette)
+        self.palette_layout = QHBoxLayout()
         
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
@@ -189,6 +202,20 @@ class PaintingLabWindow(QMainWindow):
         colour_group.setLayout(colour_layout)
         
         controls_layout.addWidget(colour_group)
+        
+        # Palette Extraction section
+        palette_group = QGroupBox("Palette Extraction")
+        
+        palette_layout = QVBoxLayout()
+        
+        palette_layout.addWidget(self.palette_selector)
+        palette_layout.addWidget(self.palette_button)
+        
+        palette_layout.addLayout(self.palette_layout)
+        
+        palette_group.setLayout(palette_layout)
+        
+        controls_layout.addWidget(palette_group)
 
         # Original image button
         controls_layout.addWidget(self.original_button)
@@ -359,7 +386,54 @@ class PaintingLabWindow(QMainWindow):
         self.current_pixmap = QPixmap.fromImage(qt_image)
         
         self.display_image()
+        
+        
+    def show_palette(self):
+        if not hasattr(self, "image_path"):
+            return
+        
+        image = load_image(self.image_path)
+        
+        colours = self.palette_selector.currentData()
+        
+        palette = extract_palette(image, colours=colours)
+        
+        # Remove existing swatches
+        while self.palette_layout.count():
+            item = self.palette_layout.takeAt(0)
+            
+            widget = item.widget()
+            
+            if widget is not None:
+                widget.deleteLater()
                 
+        # Display new palette
+        for colour in palette:
+            swatch = QWidget()
+            
+            swatch.setFixedSize(35, 35)
+            
+            red, green, blue = colour
+            
+            qt_colour = QColor(
+                int(red),
+                int(green),
+                int(blue),
+            )
+            
+            swatch_palette = swatch.palette()
+            
+            swatch_palette.setColor(
+                QPalette.ColorRole.Window,
+                qt_colour,
+            )
+            
+            swatch.setPalette(swatch_palette)
+            
+            swatch.setAutoFillBackground(True)
+            
+            self.palette_layout.addWidget(swatch)
+                  
         
     def show_original(self):
         if not hasattr(self, "original_pixmap"):
