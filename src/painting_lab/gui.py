@@ -116,6 +116,7 @@ class PaintingLabWindow(QMainWindow):
         self.palette_button.clicked.connect(self.show_palette)
         self.palette_layout = QHBoxLayout()
         
+        self.extracted_palette = []
         self.selected_colour = None
         
         self.mix_button = QPushButton("Suggest Paint Mix")
@@ -290,7 +291,7 @@ class PaintingLabWindow(QMainWindow):
             self.image_path = file_path
             self.original_pixmap = QPixmap(file_path)
             self.current_pixmap = self.original_pixmap
-            
+            self.reset_colour_analysis()
             self.display_image()
             
             
@@ -502,13 +503,8 @@ class PaintingLabWindow(QMainWindow):
             
     
     def show_paint_mix(self):
-        #Check palette has been extracted
-        if not hasattr(self, "extracted_palette"):
-            self.mix_result.setText("Extract a palette to begin.")
-            return
-        
         if not self.extracted_palette:
-            self.mix_result.setText("No colours were found.")
+            self.mix_result.setText("Extract a palette to begin.")
             return
         
         if self.selected_colour is None:
@@ -538,6 +534,31 @@ class PaintingLabWindow(QMainWindow):
         
         self.current_pixmap = self.original_pixmap
         self.display_image()
+        
+        
+    def reset_colour_analysis(self):
+        self.extracted_palette = []
+        self.selected_colour = None
+        
+        # Remove old palette swatches
+        while self.palette_layout.count():
+            item = self.palette_layout.takeAt(0)
+            
+            widget = item.widget()
+            
+            if widget is not None:
+                widget.deleteLater()
+                
+        self.mix_result.setText("Extract a palette to begin.")
+        
+        target_palette = self.target_colour_swatch.palette()
+        
+        target_palette.setColor(
+            QPalette.ColorRole.Window,
+            QColor(240, 240, 240),
+        )
+        
+        self.target_colour_swatch.setPalette(target_palette)
             
         
 def run_app():

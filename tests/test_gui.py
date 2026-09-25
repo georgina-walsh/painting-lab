@@ -3,7 +3,7 @@ from painting_lab.gui import PaintingLabWindow
 from PIL import Image
 
 from PySide6.QtGui import QColor, QPalette, QPixmap
-from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
+from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea, QWidget
 
 from types import SimpleNamespace
 
@@ -782,3 +782,52 @@ def test_selecting_new_colour_changes_target():
         100,
         130,
     )
+    
+    
+def test_opening_new_image_clears_colour_analysis(tmp_path):
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    # Pretend we already analysed an earlier image.
+    window.extracted_palette = [
+        (180, 70, 50),
+        (220, 180, 90),
+    ]
+
+    window.selected_colour = (180, 70, 50)
+
+    window.mix_result.setText(
+        "Suggested starting mixture: Cadmium Red"
+    )
+
+    # Add a fake palette swatch.
+    fake_swatch = QWidget()
+    window.palette_layout.addWidget(fake_swatch)
+
+    # Create another image to open.
+    image_path = tmp_path / "new_image.png"
+
+    Image.new(
+        "RGB",
+        (50, 50),
+        color=(100, 120, 140),
+    ).save(image_path)
+
+    with patch(
+        "painting_lab.gui.QFileDialog.getOpenFileName",
+        return_value=(str(image_path), ""),
+    ):
+        window.open_image()
+
+    assert window.extracted_palette == []
+    assert window.selected_colour is None
+    assert window.palette_layout.count() == 0
+
+    assert window.mix_result.text() == (
+        "Extract a palette to begin."
+    )
+    
