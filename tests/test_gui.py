@@ -725,4 +725,60 @@ def test_mixing_guide_uses_selected_colour():
 
         assert "Yellow Ochre" in window.mix_result.text()
         assert "Titanium White" in window.mix_result.text()
+        
+        
+def test_select_colour_updates_target_swatch():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    target = (180, 70, 50)
+
+    window.select_colour(target)
+
+    assert window.selected_colour == target
+
+    displayed_colour = (
+        window.target_colour_swatch
+        .palette()
+        .color(QPalette.ColorRole.Window)
+    )
+
+    assert displayed_colour == QColor(
+        180,
+        70,
+        50,
+    )
     
+    
+def test_selecting_new_colour_changes_target():
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication([])
+
+    window = PaintingLabWindow()
+
+    window.select_colour((180, 70, 50))
+    window.select_colour((60, 100, 130))
+
+    assert window.selected_colour == (
+        60,
+        100,
+        130,
+    )
+
+    displayed_colour = (
+        window.target_colour_swatch
+        .palette()
+        .color(QPalette.ColorRole.Window)
+    )
+
+    assert displayed_colour == QColor(
+        60,
+        100,
+        130,
+    )

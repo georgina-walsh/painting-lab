@@ -124,6 +124,14 @@ class PaintingLabWindow(QMainWindow):
         self.mix_result = QLabel("Extract a palette to begin painting.")
         self.mix_result.setWordWrap(True)
         
+        self.target_colour_label = QLabel("Target Colour")
+        self.target_colour_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.target_colour_swatch = QWidget()
+        self.target_colour_swatch.setFixedSize(100, 60)
+        
+        self.target_colour_swatch.setAutoFillBackground(True)
+        
         self.original_button = QPushButton("Show Original")
         self.original_button.clicked.connect(self.show_original)
         
@@ -231,6 +239,12 @@ class PaintingLabWindow(QMainWindow):
         mix_group = QGroupBox("Paint-Mixing Guide")
         
         mix_layout = QVBoxLayout()
+        
+        mix_layout.addWidget(self.target_colour_label)
+        mix_layout.addWidget(
+            self.target_colour_swatch,
+            alignment=Qt.AlignmentFlag.AlignCenter,
+            )
         
         mix_layout.addWidget(self.mix_button)
         mix_layout.addWidget(self.mix_result)
@@ -412,9 +426,25 @@ class PaintingLabWindow(QMainWindow):
         
     def select_colour(self, colour):
         self.selected_colour = colour
-        self.mix_result.setText(
-            "Colour selected. Click Suggest Paint Mix."
+        
+        red, green, blue = colour
+        
+        qt_colour = QColor(
+            int(red),
+            int(green),
+            int(blue),
         )
+        
+        swatch_palette = self.target_colour_swatch.palette()
+        
+        swatch_palette.setColor(
+            QPalette.ColorRole.Window,
+            qt_colour,
+        )
+        
+        self.target_colour_swatch.setPalette(swatch_palette)
+        
+        self.mix_result.setText("Colour selected. Click 'Suggest Paint Mix.'")
         
         
     def show_palette(self):
